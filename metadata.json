@@ -1,0 +1,11 @@
+{
+  "name": "CivicSense",
+  "description": "A hyperlocal community problem solver platform where citizens report issues, collaborate, track progress, and earn rewards while AI aids in categorization and validation.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
