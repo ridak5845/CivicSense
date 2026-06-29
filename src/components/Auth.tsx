@@ -578,6 +578,45 @@ export default function Auth({ onLoginSuccess, syncProfile, theme, onThemeToggle
                     </button>
                   </div>
                 )}
+
+                {/* Quick Demo Login Preset Section */}
+                {!isRegistering && (
+                  <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono font-extrabold text-center mb-3">
+                      ⚡ Demo Account Quick Access
+                    </p>
+                    <div className="space-y-2">
+                      {(activeTab === "citizen" ? CITIZEN_PRESETS : GOV_PRESETS).map((preset) => (
+                        <button
+                          key={preset.email}
+                          type="button"
+                          disabled={loading}
+                          onClick={() => handleQuickLogin(preset, activeTab === "government")}
+                          className="w-full text-left p-2.5 rounded-xl border border-dashed border-slate-200 hover:border-emerald-500 dark:border-slate-800 dark:hover:border-emerald-500 hover:bg-emerald-50/20 dark:hover:bg-emerald-500/5 transition-all flex items-center justify-between group cursor-pointer"
+                        >
+                          <div className="min-w-0">
+                            <div className="text-xs font-sans font-bold text-slate-700 dark:text-slate-200 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 flex items-center space-x-1.5">
+                              <span>{preset.name}</span>
+                              {activeTab === "citizen" ? (
+                                <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-md font-mono font-normal">
+                                  {(preset as any).points} pts
+                                </span>
+                              ) : (
+                                <span className="text-[9px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-md font-mono font-semibold">
+                                  {(preset as any).pin}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                              {preset.desc}
+                            </p>
+                          </div>
+                          <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </motion.form>
             )}
           </AnimatePresence>
