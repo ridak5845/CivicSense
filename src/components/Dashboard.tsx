@@ -86,25 +86,34 @@ export default function Dashboard({
 
   return (
     <div id="dashboard-view" className="space-y-6">
-      {/* Upper header action banner */}
-      <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] p-6 rounded-2xl border border-slate-800 shadow-md text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-400 font-bold bg-emerald-950/80 px-2.5 py-1 rounded-md border border-emerald-500/20">
-            Hackathon Highlight - CivicSense
-          </span>
-          <h2 className="text-2xl md:text-3xl font-sans font-extrabold tracking-tight mt-2">Empowering Local Citizens</h2>
-          <p className="text-sm text-slate-300 max-w-xl">
-            Identify infrastructure failures, submit real-time photographic reports with AI analysis, and coordinate with municipal officers to repair our city.
-          </p>
+      {/* Upper header action banner with traveling glow border */}
+      <div className="relative overflow-hidden rounded-2xl p-[1.5px] shadow-lg group">
+        {/* Traveling border glow effect */}
+        <div className="absolute inset-[-1000%] bg-[conic-gradient(from_90deg,transparent_40%,#10b981_50%,transparent_60%)] animate-border-spin pointer-events-none" />
+        
+        {/* The inner content banner */}
+        <div className="relative bg-gradient-to-r from-[#0D1527] to-[#1E293B] p-6 rounded-[14px] text-white flex flex-col md:flex-row md:items-center justify-between gap-4 w-full h-full z-10">
+          <div className="space-y-1">
+            <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-400 font-bold bg-emerald-950/80 px-2.5 py-1 rounded-md border border-emerald-500/20 inline-flex items-center gap-1.5 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+              CivicSense Hackathon Showcase
+            </span>
+            <h2 className="text-2xl md:text-3xl font-sans font-extrabold tracking-tight mt-2 bg-gradient-to-r from-white via-emerald-100 to-emerald-300 bg-clip-text text-transparent drop-shadow-sm">
+              Empowering Communities Globally
+            </h2>
+            <p className="text-sm text-slate-300 max-w-xl">
+              Identify infrastructure failures, submit real-time photographic reports with AI analysis, and coordinate with municipal officers to repair our city.
+            </p>
+          </div>
+          <button
+            id="report-issue-banner-btn"
+            onClick={() => onViewChange("report")}
+            className="bg-emerald-500 hover:bg-emerald-600 hover:scale-[1.02] active:scale-98 transition-all text-white font-sans font-semibold text-sm px-5 py-3 rounded-xl shadow-lg shadow-emerald-500/10 flex items-center justify-center space-x-2 shrink-0 cursor-pointer z-20"
+          >
+            <TrendingUp className="w-4 h-4" />
+            <span>Report New Hazard (+100 pts)</span>
+          </button>
         </div>
-        <button
-          id="report-issue-banner-btn"
-          onClick={() => onViewChange("report")}
-          className="bg-emerald-500 hover:bg-emerald-600 hover:scale-[1.02] active:scale-98 transition-all text-white font-sans font-semibold text-sm px-5 py-3 rounded-xl shadow-lg shadow-emerald-500/10 flex items-center justify-center space-x-2 shrink-0 cursor-pointer"
-        >
-          <TrendingUp className="w-4 h-4" />
-          <span>Report New Hazard (+100 pts)</span>
-        </button>
       </div>
 
       {/* Dashboard Sub-navigation Tabs */}

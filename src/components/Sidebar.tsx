@@ -13,6 +13,8 @@ import {
   Sun,
   Moon
 } from "lucide-react";
+import { Issue, UserProfile } from "../types";
+import NotificationBell from "./NotificationBell";
 
 interface SidebarProps {
   currentView: string;
@@ -21,6 +23,9 @@ interface SidebarProps {
   isGovernment?: boolean;
   theme: "light" | "dark";
   onThemeToggle: () => void;
+  issues: Issue[];
+  currentUser: UserProfile;
+  onSelectIssue: (issueId: string) => void;
 }
 
 export default function Sidebar({ 
@@ -29,7 +34,10 @@ export default function Sidebar({
   userPoints, 
   isGovernment,
   theme,
-  onThemeToggle
+  onThemeToggle,
+  issues,
+  currentUser,
+  onSelectIssue
 }: SidebarProps) {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -75,6 +83,15 @@ export default function Sidebar({
           >
             {theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
           </button>
+
+          {/* Interactive Notification Bell */}
+          <NotificationBell 
+            issues={issues}
+            currentUser={currentUser}
+            onSelectIssue={onSelectIssue}
+            onViewChange={onViewChange}
+            theme={theme}
+          />
 
           <div className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 rounded text-xs text-emerald-600 dark:text-emerald-400 font-mono">
             {userPoints} pts

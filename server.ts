@@ -213,6 +213,12 @@ const seedIssues: Issue[] = [
   }
 ];
 
+const getRelativeDateStr = (daysAgo: number): string => {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return d.toISOString().split("T")[0];
+};
+
 // --- USER PROFILES STORE (GAMIFICATION) ---
 const seedUserProfiles: { [email: string]: UserProfile & { password?: string } } = {
   "clara.civic@gmail.com": {
@@ -222,7 +228,14 @@ const seedUserProfiles: { [email: string]: UserProfile & { password?: string } }
     reportedCount: 1,
     verifiedCount: 4,
     badges: ["civic-explorer", "local-guardian", "truth-seeker"],
-    password: "password123"
+    password: "password123",
+    streak: 4,
+    activityDates: [
+      getRelativeDateStr(0),
+      getRelativeDateStr(1),
+      getRelativeDateStr(2),
+      getRelativeDateStr(3)
+    ]
   },
   "marcus.green@gmail.com": {
     email: "marcus.green@gmail.com",
@@ -231,7 +244,17 @@ const seedUserProfiles: { [email: string]: UserProfile & { password?: string } }
     reportedCount: 1,
     verifiedCount: 3,
     badges: ["civic-explorer", "truth-seeker", "community-hero"],
-    password: "password123"
+    password: "password123",
+    streak: 7,
+    activityDates: [
+      getRelativeDateStr(0),
+      getRelativeDateStr(1),
+      getRelativeDateStr(2),
+      getRelativeDateStr(3),
+      getRelativeDateStr(4),
+      getRelativeDateStr(5),
+      getRelativeDateStr(6)
+    ]
   },
   "sarah.bright@gmail.com": {
     email: "sarah.bright@gmail.com",
@@ -240,7 +263,11 @@ const seedUserProfiles: { [email: string]: UserProfile & { password?: string } }
     reportedCount: 1,
     verifiedCount: 2,
     badges: ["civic-explorer"],
-    password: "password123"
+    password: "password123",
+    streak: 1,
+    activityDates: [
+      getRelativeDateStr(0)
+    ]
   },
   "david.eco@gmail.com": {
     email: "david.eco@gmail.com",
@@ -249,7 +276,22 @@ const seedUserProfiles: { [email: string]: UserProfile & { password?: string } }
     reportedCount: 1,
     verifiedCount: 5,
     badges: ["civic-explorer", "local-guardian", "truth-seeker", "community-hero", "civic-champion"],
-    password: "password123"
+    password: "password123",
+    streak: 12,
+    activityDates: [
+      getRelativeDateStr(0),
+      getRelativeDateStr(1),
+      getRelativeDateStr(2),
+      getRelativeDateStr(3),
+      getRelativeDateStr(4),
+      getRelativeDateStr(5),
+      getRelativeDateStr(6),
+      getRelativeDateStr(7),
+      getRelativeDateStr(8),
+      getRelativeDateStr(9),
+      getRelativeDateStr(10),
+      getRelativeDateStr(11)
+    ]
   }
 };
 
@@ -294,6 +336,55 @@ const BADGES_LIST = [
   { id: "town-watchdog", name: "🐕 Town Watchdog", description: "Filed 3 or more total neighborhood reports to keep city officials actively on alert", icon: "TrendingUp", color: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-800/60" }
 ];
 
+// Helper to record user activity and update consecutive day streak
+const recordUserActivity = (email: string) => {
+  if (!email) return;
+  const userEmail = email.toLowerCase();
+  const profile = userProfiles[userEmail];
+  if (!profile) return;
+
+  const todayStr = new Date().toISOString().split("T")[0];
+  if (!profile.activityDates) {
+    profile.activityDates = [];
+  }
+
+  if (!profile.activityDates.includes(todayStr)) {
+    profile.activityDates.push(todayStr);
+  }
+
+  // Calculate streak
+  const uniqueDates = Array.from(new Set(profile.activityDates)).sort((a, b) => b.localeCompare(a));
+  
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
+  
+  let streak = 0;
+  if (uniqueDates[0] === todayStr || uniqueDates[0] === yesterdayStr) {
+    streak = 1;
+    let currentDate = new Date(uniqueDates[0]);
+    for (let i = 1; i < uniqueDates.length; i++) {
+      const prevDate = new Date(uniqueDates[i]);
+      const diffTime = Math.abs(currentDate.getTime() - prevDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        streak++;
+        currentDate = prevDate;
+      } else if (diffDays > 1) {
+        break;
+      }
+    }
+  } else {
+    // If last active was before yesterday, streak is broken, but if they are active today it would be 1
+    streak = uniqueDates[0] === todayStr ? 1 : 0;
+  }
+  
+  profile.streak = streak;
+  saveUsersToDisk(userProfiles);
+  console.log(`Updated activity for ${userEmail}. Current streak: ${profile.streak}. Total active days: ${profile.activityDates.length}`);
+};
+
 // --- INITIALIZE GEMINI ---
 let ai: GoogleGenAI | null = null;
 try {
@@ -314,6 +405,53 @@ try {
 } catch (err) {
   console.error("Error setting up Gemini Client:", err);
 }
+
+// Helper to perform Gemini generateContent calls with fallback models and retry logic on 503/429 transient errors
+async function generateContentWithRetry(params: {
+  contents: any;
+  config?: any;
+  model?: string;
+}) {
+  if (!ai) throw new Error("Gemini client not initialized");
+  
+  const preferredModel = params.model || "gemini-3.5-flash";
+  const modelsToTry = [preferredModel];
+  
+  if (preferredModel === "gemini-3.5-flash") {
+    modelsToTry.push("gemini-3.1-flash-lite");
+  }
+
+  let lastError: any = null;
+
+  for (const model of modelsToTry) {
+    let retries = 2;
+    while (retries >= 0) {
+      try {
+        console.log(`Generating content using model: ${model} (attempts remaining: ${retries})`);
+        const response = await ai.models.generateContent({
+          model: model,
+          contents: params.contents,
+          config: params.config,
+        });
+        return response;
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`Error calling Gemini model ${model} (attempts remaining: ${retries}):`, err.message || err);
+        
+        const isTransient = err.status === 503 || err.status === 429 || 
+                            (err.message && (err.message.includes("503") || err.message.includes("429") || err.message.includes("demand") || err.message.includes("UNAVAILABLE")));
+        if (isTransient && retries > 0) {
+          retries--;
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+        break;
+      }
+    }
+  }
+  throw lastError || new Error("Failed to generate content with all configured models");
+}
+
 
 // --- API ENDPOINTS ---
 
@@ -387,7 +525,7 @@ app.post("/api/issues", async (req, res) => {
         6. Suggest the best matching category from: ["Pothole & Roads", "Water & Leakage", "Streetlight & Power", "Waste & Sanitation", "Public Parks & Infrastructure", "Other"].
         `;
 
-        const response = await ai.models.generateContent({
+        const response = await generateContentWithRetry({
           model: "gemini-3.5-flash",
           contents: { parts: [imagePart, { text: promptText }] },
           config: {
@@ -558,12 +696,14 @@ app.post("/api/issues", async (req, res) => {
     // Persist to disk
     saveIssuesToDisk(issues);
     saveUsersToDisk(userProfiles);
+    recordUserActivity(email);
 
     res.status(201).json({
       issue: newIssue,
       pointsEarned,
       newTotalPoints: profile.points,
-      unlockedBadges: profile.badges
+      unlockedBadges: profile.badges,
+      streak: profile.streak || 0
     });
 
   } catch (error: any) {
@@ -651,6 +791,7 @@ app.post("/api/issues/:id/upvote", (req, res) => {
   // Persist to disk
   saveIssuesToDisk(issues);
   saveUsersToDisk(userProfiles);
+  recordUserActivity(userEmail);
 
   res.json({
     issue,
@@ -826,8 +967,10 @@ app.post("/api/user/login", (req, res) => {
     }
   }
 
+  recordUserActivity(userEmail);
+
   res.json({
-    profile: profile,
+    profile: userProfiles[userEmail],
     badgesList: BADGES_LIST
   });
 });
@@ -875,6 +1018,7 @@ app.post("/api/user/sync", (req, res) => {
 
   // Persist to disk
   saveUsersToDisk(userProfiles);
+  recordUserActivity(userEmail);
 
   res.json({
     profile: userProfiles[userEmail],
@@ -909,6 +1053,7 @@ app.post("/api/chat", async (req, res) => {
           profile.points += 10; // 10 points bonus for seeking wisdom!
           saveUsersToDisk(userProfiles);
         }
+        recordUserActivity(userEmail);
       }
     }
 
@@ -987,19 +1132,39 @@ app.post("/api/chat", async (req, res) => {
           }
         }
 
-        const chat = ai.chats.create({
-          model: "gemini-3.5-flash",
-          history: geminiHistory,
-          config: {
-            systemInstruction,
-            temperature: 0.7,
-          },
-        });
+        let replyText = "";
+        try {
+          const chat = ai.chats.create({
+            model: "gemini-3.5-flash",
+            history: geminiHistory,
+            config: {
+              systemInstruction,
+              temperature: 0.7,
+            },
+          });
+          const response = await chat.sendMessage({ message: message });
+          replyText = response.text || "";
+        } catch (firstErr: any) {
+          console.warn("Primary chat attempt failed, trying fallback model gemini-3.1-flash-lite...", firstErr.message || firstErr);
+          try {
+            const chatFallback = ai.chats.create({
+              model: "gemini-3.1-flash-lite",
+              history: geminiHistory,
+              config: {
+                systemInstruction,
+                temperature: 0.7,
+              },
+            });
+            const response = await chatFallback.sendMessage({ message: message });
+            replyText = response.text || "";
+          } catch (fallbackErr: any) {
+            console.error("Both chat models failed, switching to offline simulation:", fallbackErr.message || fallbackErr);
+            throw fallbackErr; // Trigger catch block to run offline fallback
+          }
+        }
 
-        // Send the active conversation message
-        const response = await chat.sendMessage({ message: message });
         return res.json({
-          reply: response.text,
+          reply: replyText,
           timestamp: new Date().toISOString()
         });
       } catch (geminiErr: any) {
@@ -1368,7 +1533,7 @@ app.get("/api/insights", async (req, res) => {
       }]
       `;
 
-      const response = await ai.models.generateContent({
+      const response = await generateContentWithRetry({
         model: "gemini-3.5-flash",
         contents: prompt,
         config: {

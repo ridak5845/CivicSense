@@ -11,7 +11,10 @@ import {
   TrendingUp, 
   Medal,
   Lock,
-  Check
+  Check,
+  Flame,
+  Calendar,
+  CalendarCheck
 } from "lucide-react";
 import { UserProfile, Badge } from "../types";
 import { motion } from "motion/react";
@@ -25,6 +28,31 @@ export default function Leaderboard({ currentUserEmail, onFetchLeaderboard }: Le
   const [leaderboard, setLeaderboard] = React.useState<UserProfile[]>([]);
   const [badgesList, setBadgesList] = React.useState<Badge[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [checkingIn, setCheckingIn] = React.useState(false);
+  const [checkedInMessage, setCheckedInMessage] = React.useState("");
+
+  const handleCheckIn = async () => {
+    setCheckingIn(true);
+    setCheckedInMessage("");
+    try {
+      const response = await fetch("/api/user/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: currentUserEmail })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Update this user's profile in the leaderboard list
+        setLeaderboard(prev => prev.map(u => u.email === currentUserEmail.toLowerCase() ? data.profile : u));
+        setCheckedInMessage("Awesome! You logged today's engagement. Streak maintained! 🔥");
+        setTimeout(() => setCheckedInMessage(""), 4000);
+      }
+    } catch (err) {
+      console.error("Check-in failed", err);
+    } finally {
+      setCheckingIn(false);
+    }
+  };
 
   React.useEffect(() => {
     const loadLeaderboardData = async () => {
@@ -86,6 +114,186 @@ export default function Leaderboard({ currentUserEmail, onFetchLeaderboard }: Le
               <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-100 block">Unlocked Badges</span>
               <span className="text-2xl font-mono font-black text-white">{currentUser.badges.length}/{badgesList.length || 8}</span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Civic Streak Component */}
+      {currentUser && (
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+            <div className="flex items-start space-x-3.5">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/20 rounded-xl text-amber-500 shrink-0">
+                <Flame className="w-8 h-8 animate-pulse text-amber-500 fill-amber-500" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs uppercase font-mono tracking-wider text-slate-400 dark:text-slate-500 font-semibold">Civic Engagement Streak</span>
+                  <span className="bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-400 text-[10px] px-2 py-0.5 rounded-full font-bold font-mono">
+                    ACTIVE
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold font-sans tracking-tight text-slate-900 dark:text-white mt-0.5">
+                  🔥 {currentUser.streak || 1} Day Streak
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xl mt-1 leading-normal">
+                  You are actively helping keep your town safe and clean! Engaged citizens participate by submitting hazard logs, checking in, or verifying/upvoting other residents' complaints.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:items-end justify-center shrink-0">
+              <button
+                id="streak-check-in-btn"
+                onClick={handleCheckIn}
+                disabled={checkingIn}
+                className="bg-amber-500 hover:bg-amber-600 active:scale-98 text-white font-sans font-semibold text-xs px-4.5 py-2.5 rounded-xl shadow-md transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+              >
+                <CalendarCheck className="w-4 h-4" />
+                <span>{checkingIn ? "Logging Activity..." : "Log Daily Check-In"}</span>
+              </button>
+              {checkedInMessage && (
+                <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium mt-1.5 animate-pulse text-center sm:text-right">
+                  {checkedInMessage}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Calendar and stats grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Calendar view (Left 2 columns) */}
+            <div className="lg:col-span-2 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 font-sans flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                  <span>Activity Calendar - {new Date().toLocaleString("default", { month: "long" })} {new Date().getFullYear()}</span>
+                </h4>
+                <div className="flex items-center space-x-3 text-[10px] font-mono text-slate-400 dark:text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 bg-emerald-500 rounded-md inline-block"></span>
+                    <span>Active</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 rounded-md inline-block"></span>
+                    <span>Inactive</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Monthly calendar render */}
+              <div className="border border-slate-100 dark:border-slate-800 rounded-xl p-4 bg-white dark:bg-slate-950/30">
+                {/* Weekdays row */}
+                <div className="grid grid-cols-7 gap-2 text-center text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
+                    <div key={day} className="py-1">{day}</div>
+                  ))}
+                </div>
+
+                {/* Calendar grid cells */}
+                <div className="grid grid-cols-7 gap-2">
+                  {(() => {
+                    const currentYear = new Date().getFullYear();
+                    const currentMonth = new Date().getMonth();
+                    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                    const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+                    const blanks = Array(firstDayIndex).fill(null);
+                    const monthDays = Array.from({ length: daysInMonth }, (_, idx) => idx + 1);
+                    const calendarGrid = [...blanks, ...monthDays];
+
+                    const todayStr = new Date().toISOString().split("T")[0];
+                    const activeDates = currentUser.activityDates || [];
+
+                    return calendarGrid.map((day, index) => {
+                      if (day === null) {
+                        return <div key={`blank-${index}`} className="aspect-square"></div>;
+                      }
+
+                      const dayStr = String(day).padStart(2, '0');
+                      const monthStr = String(currentMonth + 1).padStart(2, '0');
+                      const dateStr = `${currentYear}-${monthStr}-${dayStr}`;
+                      const isActive = activeDates.includes(dateStr);
+                      const isToday = dateStr === todayStr;
+
+                      return (
+                        <div 
+                          key={`day-${day}`}
+                          className={`aspect-square rounded-lg flex flex-col items-center justify-center relative text-xs font-mono font-medium transition-all group ${
+                            isActive
+                              ? "bg-emerald-500 text-white shadow-xs"
+                              : isToday
+                              ? "bg-slate-100 dark:bg-slate-800 border-2 border-emerald-500 text-slate-800 dark:text-white"
+                              : "bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900"
+                          }`}
+                          title={`${dateStr}${isActive ? ' - Active day!' : ''}`}
+                        >
+                          <span>{day}</span>
+                          
+                          {/* Inside active day indicator */}
+                          {isActive && (
+                            <span className="absolute bottom-1 text-[8px] leading-none animate-bounce">
+                              🔥
+                            </span>
+                          )}
+
+                          {/* Today ring indicator */}
+                          {isToday && !isActive && (
+                            <span className="absolute bottom-0.5 w-1 h-1 bg-emerald-500 rounded-full"></span>
+                          )}
+                          
+                          {/* Hover tooltip */}
+                          <div className="absolute bottom-full mb-1 bg-slate-900 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity font-sans whitespace-nowrap z-20 shadow-sm">
+                            {isActive ? "Active engagement!" : isToday ? "Today" : `${day} ${new Date().toLocaleString("default", { month: "short" })}`}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* Streak stats & suggestions (Right 1 column) */}
+            <div className="bg-white dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800 p-4.5 rounded-xl space-y-4 flex flex-col justify-between">
+              <div className="space-y-3.5">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-white font-sans tracking-tight">
+                  Streak Insights & Stats
+                </h4>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white dark:bg-slate-950 p-3 border border-slate-100 dark:border-slate-800 rounded-lg shadow-2xs">
+                    <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Consecutive Days</span>
+                    <span className="text-lg font-mono font-bold text-slate-900 dark:text-white leading-none block mt-1">
+                      {currentUser.streak || 1} day{ (currentUser.streak || 1) > 1 ? 's' : '' }
+                    </span>
+                  </div>
+                  <div className="bg-white dark:bg-slate-950 p-3 border border-slate-100 dark:border-slate-800 rounded-lg shadow-2xs">
+                    <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Total Active Days</span>
+                    <span className="text-lg font-mono font-bold text-slate-900 dark:text-white leading-none block mt-1">
+                      {currentUser.activityDates?.length || 1} day{ (currentUser.activityDates?.length || 1) > 1 ? 's' : '' }
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Upcoming Rewards</span>
+                  <div className="p-3 bg-amber-50/60 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 rounded-lg text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed flex items-start gap-2.5">
+                    <span className="text-base leading-none">🎖️</span>
+                    <div>
+                      <strong className="font-semibold block">5-Day streak multiplier</strong>
+                      Earn +20% extra reputation points for every community upvote or validation!
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal border-t border-slate-200/50 dark:border-slate-800/50 pt-3 flex items-center gap-1.5 font-mono">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping shrink-0" />
+                <span>Keep reporting and upvoting to protect your streak score!</span>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

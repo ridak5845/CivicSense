@@ -237,11 +237,11 @@ export default function Auth({ onLoginSuccess, syncProfile, theme, onThemeToggle
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 relative overflow-hidden select-none text-slate-800 dark:text-white transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-gradient-to-b dark:from-[#050811] dark:via-[#0b1222] dark:to-[#03060c] flex flex-col items-center justify-center p-4 relative overflow-hidden select-none text-slate-800 dark:text-white transition-colors duration-300">
       
       {/* Decorative ambient background glowing orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-500/15 rounded-full blur-[120px] animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-blue-500/10 dark:bg-blue-500/15 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: "2s" }} />
 
       {/* Floating Theme Toggle in Login View */}
       <div className="absolute top-6 right-6 z-50">
@@ -295,12 +295,16 @@ export default function Auth({ onLoginSuccess, syncProfile, theme, onThemeToggle
         </div>
 
         {/* Auth card wrapper */}
-        <motion.div 
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
-          className="bg-white border border-slate-200 dark:bg-[#0F172A] dark:border-slate-800 rounded-3xl shadow-2xl p-6 relative overflow-hidden"
-        >
+        <div className="relative group w-full">
+          {/* Subtle colored glow behind the card in dark mode */}
+          <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-[32px] blur-xl opacity-0 dark:opacity-100 transition-all duration-1000 group-hover:duration-200 pointer-events-none" />
+          
+          <motion.div 
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
+            className="bg-white border border-slate-200 dark:bg-[#0F172A] dark:border-slate-800 rounded-3xl shadow-2xl dark:shadow-[0_0_50px_-12px_rgba(16,185,129,0.25),0_0_30px_-15px_rgba(59,130,246,0.25)] p-6 relative overflow-hidden w-full"
+          >
           {/* Tabs header */}
           {!showOtpScreen && (
             <div className="flex bg-slate-100 border border-slate-200 dark:bg-slate-950 dark:border-slate-800/80 p-1 rounded-2xl mb-6">
@@ -621,6 +625,7 @@ export default function Auth({ onLoginSuccess, syncProfile, theme, onThemeToggle
             )}
           </AnimatePresence>
         </motion.div>
+      </div>
         
       </div>
     </div>

@@ -53,6 +53,8 @@ export interface UserProfile {
   verifiedCount: number;
   badges: string[]; // badge IDs
   isGovernment?: boolean;
+  streak?: number;
+  activityDates?: string[];
 }
 
 export interface ChatMessage {

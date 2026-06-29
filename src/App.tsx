@@ -8,6 +8,7 @@ import Insights from "./components/Insights";
 import Leaderboard from "./components/Leaderboard";
 import GovernmentPortal from "./components/GovernmentPortal";
 import Auth from "./components/Auth";
+import NotificationBell from "./components/NotificationBell";
 import { motion, AnimatePresence } from "motion/react";
 
 import { Issue, UserProfile, SystemInsight, ChatMessage } from "./types";
@@ -434,15 +435,18 @@ export default function App() {
         isGovernment={currentUser.isGovernment}
         theme={theme}
         onThemeToggle={toggleTheme}
+        issues={issues}
+        currentUser={currentUser}
+        onSelectIssue={setSelectedIssueId}
       />
 
       {/* Main Content Area (Responsive Right) */}
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* Top Navbar Header */}
-        <header id="desktop-header" className="hidden md:flex items-center justify-between px-8 py-4 bg-white border-b border-slate-150/80 sticky top-0 z-20">
+        <header id="desktop-header" className="hidden md:flex items-center justify-between px-8 py-4 bg-white dark:bg-[#0F172A] border-b border-slate-150/80 dark:border-slate-800/80 sticky top-0 z-20 transition-colors">
           <div className="flex items-center space-x-2">
-            <h1 className="text-xl font-sans font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-xl font-sans font-extrabold text-slate-900 dark:text-white tracking-tight">
               {currentView === "dashboard" && "Impact Dashboard"}
               {currentView === "tracker" && "Interactive Issue Tracker"}
               {currentView === "report" && "Report Community Hazard"}
@@ -453,8 +457,18 @@ export default function App() {
             </h1>
           </div>
 
-          {/* Citizen role switcher workspace */}
-          <div className="relative">
+          <div className="flex items-center space-x-4">
+            {/* Dynamic Notification Bell with live counter and updates dropdown */}
+            <NotificationBell 
+              issues={issues}
+              currentUser={currentUser}
+              onSelectIssue={setSelectedIssueId}
+              onViewChange={handleViewChange}
+              theme={theme}
+            />
+
+            {/* Citizen role switcher workspace */}
+            <div className="relative">
             <button
               id="role-switch-trigger"
               onClick={() => setShowUserDropdown(!showUserDropdown)}
@@ -588,6 +602,7 @@ export default function App() {
                 )}
               </div>
             )}
+          </div>
           </div>
         </header>
 

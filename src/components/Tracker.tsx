@@ -88,11 +88,11 @@ export default function Tracker({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pending": return "text-slate-500 bg-slate-100 border-slate-200";
-      case "Verifying": return "text-amber-600 bg-amber-50 border-amber-200";
-      case "In Progress": return "text-blue-600 bg-blue-50 border-blue-200";
-      case "Resolved": return "text-emerald-700 bg-emerald-50 border-emerald-200";
-      default: return "text-slate-500 bg-slate-100 border-slate-200";
+      case "Pending": return "text-slate-500 bg-slate-100 border-slate-200 dark:text-slate-400 dark:bg-slate-800/50 dark:border-slate-800";
+      case "Verifying": return "text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-500/5 dark:border-amber-900/30";
+      case "In Progress": return "text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-500/5 dark:border-blue-900/30";
+      case "Resolved": return "text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/5 dark:border-emerald-900/30";
+      default: return "text-slate-500 bg-slate-100 border-slate-200 dark:text-slate-400 dark:bg-slate-800/50 dark:border-slate-800";
     }
   };
 
@@ -227,30 +227,30 @@ export default function Tracker({
           </div>
 
           {/* Filters and List view */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-[#0F172A] p-5 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-sm space-y-4">
             
             {/* Search and Filters controls */}
             <div className="flex flex-col md:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
                 <input
                   id="search-input"
                   type="text"
                   placeholder="Search issues, streets, keywords..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-9 pr-4 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-9 pr-4 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-[#0F172A]"
                 />
               </div>
 
               {/* Category Filter */}
               <div className="flex items-center space-x-2">
-                <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <Filter className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                 <select
                   id="category-filter"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-[#0F172A]"
                 >
                   {categories.map(cat => <option key={cat} value={cat}>{cat === "All" ? "All Categories" : cat}</option>)}
                 </select>
@@ -262,7 +262,7 @@ export default function Tracker({
                   id="status-filter"
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white w-full"
+                  className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-[#0F172A] w-full"
                 >
                   {statuses.map(st => <option key={st} value={st}>{st === "All" ? "All Statuses" : st}</option>)}
                 </select>
@@ -272,62 +272,89 @@ export default function Tracker({
             {/* List Results */}
             <div id="tracker-list-results" className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
               {filteredIssues.length > 0 ? (
-                filteredIssues.map((issue) => (
-                  <div
-                    key={issue.id}
-                    id={`issue-card-${issue.id}`}
-                    onClick={() => setSelectedIssueId(issue.id)}
-                    className={`p-4 border rounded-xl hover:border-slate-300 hover:shadow-sm cursor-pointer transition-all flex gap-4 ${
-                      issue.id === selectedIssueId 
-                        ? "border-emerald-500 bg-emerald-50/10 shadow-sm shadow-emerald-500/5" 
-                        : "border-slate-100 bg-white"
-                    }`}
-                  >
-                    {/* Miniature thumbnail */}
-                    {issue.mediaUrl && (
-                      <div className="w-16 h-16 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-100 hidden sm:block">
-                        <img 
-                          src={issue.mediaUrl} 
-                          alt="reported infrastructure" 
-                          className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                    )}
+                filteredIssues.map((issue) => {
+                  const getProgressDetails = (st: string) => {
+                    switch (st) {
+                      case "Pending": return { percent: 25, color: "bg-slate-400 dark:bg-slate-500" };
+                      case "Verifying": return { percent: 50, color: "bg-amber-500" };
+                      case "In Progress": return { percent: 75, color: "bg-blue-500" };
+                      case "Resolved": return { percent: 100, color: "bg-emerald-500" };
+                      default: return { percent: 0, color: "bg-slate-300 dark:bg-slate-700" };
+                    }
+                  };
+                  const progress = getProgressDetails(issue.status);
 
-                    <div className="flex-1 space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded-full border text-[9px] font-bold ${getStatusColor(issue.status)}`}>
-                          {issue.status}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-mono">
-                          {issue.category}
-                        </span>
-                        {issue.aiAnalysis?.severity && (
-                          <span className={`px-1.5 py-0.2 rounded text-[8px] font-bold ${getSeverityBadgeColor(issue.aiAnalysis?.severity)}`}>
-                            {issue.aiAnalysis?.severity}
+                  return (
+                    <div
+                      key={issue.id}
+                      id={`issue-card-${issue.id}`}
+                      onClick={() => setSelectedIssueId(issue.id)}
+                      className={`p-4 border rounded-xl hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm cursor-pointer transition-all flex gap-4 ${
+                        issue.id === selectedIssueId 
+                          ? "border-emerald-500 bg-emerald-50/10 dark:bg-emerald-500/5 shadow-sm shadow-emerald-500/5" 
+                          : "border-slate-100 dark:border-slate-800 bg-white dark:bg-[#0F172A]"
+                      }`}
+                    >
+                      {/* Miniature thumbnail */}
+                      {issue.mediaUrl && (
+                        <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800 hidden sm:block">
+                          <img 
+                            src={issue.mediaUrl} 
+                            alt="reported infrastructure" 
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex-1 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`px-2 py-0.5 rounded-full border text-[9px] font-bold ${getStatusColor(issue.status)}`}>
+                            {issue.status}
                           </span>
-                        )}
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                            {issue.category}
+                          </span>
+                          {issue.aiAnalysis?.severity && (
+                            <span className={`px-1.5 py-0.2 rounded text-[8px] font-bold ${getSeverityBadgeColor(issue.aiAnalysis?.severity)}`}>
+                              {issue.aiAnalysis?.severity}
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-1">{issue.title}</h3>
+                        
+                        <div className="flex items-center text-[10px] text-slate-500 dark:text-slate-400 space-x-1.5 mt-1 font-sans">
+                          <MapPin className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                          <span className="line-clamp-1">{issue.address}</span>
+                        </div>
+
+                        {/* Interactive progress bar */}
+                        <div className="pt-2">
+                          <div className="flex justify-between items-center text-[9px] text-slate-400 dark:text-slate-500 font-mono mb-1">
+                            <span>Repair Progress</span>
+                            <span className="font-bold text-slate-600 dark:text-slate-400">{progress.percent}%</span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1 overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-500 ${progress.color}`}
+                              style={{ width: `${progress.percent}%` }}
+                            />
+                          </div>
+                        </div>
                       </div>
 
-                      <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-1">{issue.title}</h3>
-                      
-                      <div className="flex items-center text-[10px] text-slate-500 space-x-1.5 mt-1 font-sans">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="line-clamp-1">{issue.address}</span>
+                      {/* Upvote score badge */}
+                      <div className="text-right shrink-0 flex flex-col justify-between h-20">
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono">{new Date(issue.createdAt).toLocaleDateString()}</span>
+                        <div className="flex items-center space-x-1 text-emerald-600 bg-emerald-50 border border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/20 px-2 py-1 rounded-lg w-fit ml-auto">
+                          <ThumbsUp className="w-3.5 h-3.5 fill-emerald-500" />
+                          <span className="text-xs font-mono font-bold leading-none">{issue.upvotes}</span>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Upvote score badge */}
-                    <div className="text-right shrink-0 flex flex-col justify-between h-16">
-                      <span className="text-[9px] text-slate-400 font-mono">{new Date(issue.createdAt).toLocaleDateString()}</span>
-                      <div className="flex items-center space-x-1 text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-lg w-fit ml-auto">
-                        <ThumbsUp className="w-3.5 h-3.5 fill-emerald-500" />
-                        <span className="text-xs font-mono font-bold leading-none">{issue.upvotes}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-xl">
                   <AlertTriangle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
@@ -342,12 +369,12 @@ export default function Tracker({
         </div>
 
         {/* Right Section: Detailed Complaint Triage Pane */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col h-[700px] xl:h-[780px] overflow-y-auto">
+        <div className="bg-white dark:bg-[#0F172A] p-5 rounded-2xl border border-slate-100 dark:border-slate-800/80 shadow-sm flex flex-col h-[700px] xl:h-[780px] overflow-y-auto">
           {selectedIssue ? (
             <div id="tracker-detail-panel" className="space-y-5">
               {/* Card Header image */}
               {selectedIssue.mediaUrl && (
-                <div className="w-full h-44 rounded-xl bg-slate-100 overflow-hidden border border-slate-100 relative">
+                <div className="w-full h-44 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-100 dark:border-slate-800 relative">
                   <img 
                     src={selectedIssue.mediaUrl} 
                     alt={selectedIssue.title} 
@@ -363,8 +390,8 @@ export default function Tracker({
 
               {/* Title and stats */}
               <div className="space-y-1.5">
-                <span className="text-[10px] font-mono tracking-wider text-emerald-600 font-bold uppercase">{selectedIssue.category}</span>
-                <h3 className="text-lg font-sans font-bold text-slate-900 leading-snug">{selectedIssue.title}</h3>
+                <span className="text-[10px] font-mono tracking-wider text-emerald-600 dark:text-emerald-400 font-bold uppercase">{selectedIssue.category}</span>
+                <h3 className="text-lg font-sans font-bold text-slate-900 dark:text-white leading-snug">{selectedIssue.title}</h3>
                 
                 <div className="flex flex-wrap items-center gap-2 pt-1">
                   <span className={`px-2.5 py-0.5 rounded-full border text-xs font-bold ${getStatusColor(selectedIssue.status)}`}>
@@ -378,22 +405,92 @@ export default function Tracker({
                 </div>
               </div>
 
-              {/* Description & metadata */}
-              <div className="space-y-2 text-xs leading-relaxed text-slate-600 border-t border-slate-50 pt-3">
-                <p className="font-medium text-slate-800">{selectedIssue.description}</p>
+              {/* Visual status progress tracker */}
+              <div className="p-4 bg-white dark:bg-slate-900/60 rounded-2xl border border-slate-150 dark:border-slate-800/60 space-y-3 shadow-xs">
+                <div className="flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <span className="font-sans">Repairs Lifecycle</span>
+                  <span className="font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15 px-2 py-0.5 rounded-lg text-[10px]">
+                    {selectedIssue.status === "Pending" ? "25" :
+                     selectedIssue.status === "Verifying" ? "50" :
+                     selectedIssue.status === "In Progress" ? "75" :
+                     "100"}% Complete
+                  </span>
+                </div>
                 
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100/80 space-y-2 mt-1">
-                  <div className="flex items-center space-x-2 text-slate-500 text-[11px]">
+                <div className="relative pt-3 pb-1">
+                  {/* Background track line */}
+                  <div className="absolute top-1/2 left-4 right-4 h-1 bg-slate-200 dark:bg-slate-800 -translate-y-1/2 rounded-full z-0" />
+                  
+                  {/* Active track line */}
+                  <div 
+                    className="absolute top-1/2 left-4 h-1 bg-emerald-500 -translate-y-1/2 rounded-full transition-all duration-500 z-0" 
+                    style={{ 
+                      width: `${
+                        selectedIssue.status === "Pending" ? "0%" :
+                        selectedIssue.status === "Verifying" ? "33%" :
+                        selectedIssue.status === "In Progress" ? "66%" :
+                        "100%"
+                      }` 
+                    }}
+                  />
+
+                  {/* Step nodes */}
+                  <div className="relative flex justify-between z-10">
+                    {[
+                      { key: "Pending", label: "Reported", desc: "Report Filed" },
+                      { key: "Verifying", label: "Verified", desc: "Verifying Info" },
+                      { key: "In Progress", label: "In Progress", desc: "Dispatch Active" },
+                      { key: "Resolved", label: "Resolved", desc: "Resolved" }
+                    ].map((step, idx) => {
+                      const statusesOrder = ["Pending", "Verifying", "In Progress", "Resolved"];
+                      const currentIdx = statusesOrder.indexOf(selectedIssue.status);
+                      const stepIdx = statusesOrder.indexOf(step.key);
+                      const isCompleted = currentIdx >= stepIdx;
+                      const isCurrent = currentIdx === stepIdx;
+
+                      return (
+                        <div key={step.key} className="flex flex-col items-center flex-1 text-center">
+                          <div 
+                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all border-2 text-[10px] font-bold ${
+                              isCompleted 
+                                ? "bg-emerald-500 border-white dark:border-slate-900 text-white shadow-md shadow-emerald-500/20" 
+                                : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-400"
+                            } ${isCurrent ? "ring-4 ring-emerald-500/20 scale-110" : ""}`}
+                          >
+                            {isCompleted && step.key === "Resolved" ? (
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            ) : (
+                              idx + 1
+                            )}
+                          </div>
+                          <span className={`text-[9px] font-sans font-extrabold mt-1.5 tracking-tight ${
+                            isCompleted ? "text-slate-800 dark:text-slate-200" : "text-slate-400 dark:text-slate-600"
+                          }`}>
+                            {step.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Description & metadata */}
+              <div className="space-y-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800 pt-3">
+                <p className="font-medium text-slate-800 dark:text-slate-200">{selectedIssue.description}</p>
+                
+                <div className="bg-white dark:bg-slate-900/40 p-3 rounded-xl border border-slate-150 dark:border-slate-800/60 space-y-2 mt-1 shadow-xs">
+                  <div className="flex items-center space-x-2 text-slate-500 dark:text-slate-400 text-[11px]">
                     <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span className="font-semibold text-slate-700 line-clamp-1">{selectedIssue.address}</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 line-clamp-1">{selectedIssue.address}</span>
                   </div>
-                  <div className="flex items-center space-x-2 text-slate-500 text-[11px]">
+                  <div className="flex items-center space-x-2 text-slate-500 dark:text-slate-400 text-[11px]">
                     <User className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span>Reported by: <strong className="text-slate-700 font-semibold">{selectedIssue.reporterName}</strong></span>
+                    <span>Reported by: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{selectedIssue.reporterName}</strong></span>
                   </div>
-                  <div className="flex items-center space-x-2 text-slate-500 text-[11px]">
+                  <div className="flex items-center space-x-2 text-slate-500 dark:text-slate-400 text-[11px]">
                     <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span>Filed: <strong className="text-slate-700 font-semibold">{new Date(selectedIssue.createdAt).toLocaleDateString()}</strong></span>
+                    <span>Filed: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{new Date(selectedIssue.createdAt).toLocaleDateString()}</strong></span>
                   </div>
                 </div>
               </div>
@@ -448,27 +545,27 @@ export default function Tracker({
               </div>
 
               {/* Real-time status update logs timeline */}
-              <div className="space-y-3 pt-3 border-t border-slate-100">
-                <h4 className="text-xs font-bold text-slate-900 font-sans tracking-wide uppercase">Real-Time Repairs Timeline</h4>
+              <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white font-sans tracking-wide uppercase">Real-Time Repairs Timeline</h4>
                 
-                <div className="space-y-4 relative pl-4 border-l border-slate-100 mt-2">
+                <div className="space-y-4 relative pl-4 border-l border-slate-100 dark:border-slate-800 mt-2">
                   {selectedIssue.updates.map((upd, idx) => (
                     <div key={idx} className="relative text-xs space-y-1">
                       {/* Node point */}
-                      <span className={`absolute -left-[21px] top-1 rounded-full w-2.5 h-2.5 border-2 bg-white ${
+                      <span className={`absolute -left-[21px] top-1 rounded-full w-2.5 h-2.5 border-2 bg-white dark:bg-slate-950 ${
                         upd.status === "Resolved" ? "border-emerald-500" :
                         upd.status === "In Progress" ? "border-blue-500" :
                         upd.status === "Verifying" ? "border-amber-500" :
-                        "border-slate-400"
+                        "border-slate-400 dark:border-slate-700"
                       }`} />
                       
-                      <div className="flex justify-between items-center text-[10px] text-slate-400">
-                        <span className="font-semibold text-slate-800">{upd.status}</span>
+                      <div className="flex justify-between items-center text-[10px] text-slate-400 dark:text-slate-500">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">{upd.status}</span>
                         <span className="font-mono">{new Date(upd.updatedAt).toLocaleDateString()}</span>
                       </div>
                       
-                      <p className="text-slate-600 leading-normal text-[11px] pr-2">{upd.note}</p>
-                      <div className="text-[9px] text-slate-400 font-mono">Logged by: {upd.author}</div>
+                      <p className="text-slate-600 dark:text-slate-400 leading-normal text-[11px] pr-2">{upd.note}</p>
+                      <div className="text-[9px] text-slate-400 dark:text-slate-500 font-mono">Logged by: {upd.author}</div>
                     </div>
                   ))}
                 </div>
@@ -476,12 +573,12 @@ export default function Tracker({
 
               {/* Resolved notes spotlight */}
               {selectedIssue.status === "Resolved" && selectedIssue.governmentNotes && (
-                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-xs text-emerald-800 space-y-1">
+                <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-xl p-3 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
                   <h4 className="font-semibold flex items-center space-x-1">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <span>Official Resolution Summary</span>
                   </h4>
-                  <p className="leading-relaxed text-emerald-950 font-sans">
+                  <p className="leading-relaxed text-emerald-950 dark:text-emerald-200 font-sans">
                     {selectedIssue.governmentNotes}
                   </p>
                 </div>
@@ -489,10 +586,10 @@ export default function Tracker({
 
             </div>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center text-slate-400 py-20">
-              <Eye className="w-10 h-10 text-slate-300 mb-2" />
-              <p className="text-sm font-semibold">Triage Details Pane</p>
-              <p className="text-xs text-slate-400 max-w-xs mt-1">Click any issue on the list or choose a grid pin on the map to inspect its real-time repairs timeline.</p>
+            <div className="h-full flex flex-col items-center justify-center text-center text-slate-400 dark:text-slate-500 py-20">
+              <Eye className="w-10 h-10 text-slate-300 dark:text-slate-600 mb-2" />
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Triage Details Pane</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 max-w-xs mt-1">Click any issue on the list or choose a grid pin on the map to inspect its real-time repairs timeline.</p>
             </div>
           )}
         </div>
